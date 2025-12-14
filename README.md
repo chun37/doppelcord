@@ -49,8 +49,13 @@ createuser doppelcord -P
 # golang-migrateをインストール
 go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
-# マイグレーション実行
-migrate -path migrations -database "postgres://doppelcord:password@localhost:5432/doppelcord?sslmode=disable" up
+# マイグレーション実行（.envから接続情報を読み込む）
+./scripts/migrate.sh up
+
+# その他のコマンド
+./scripts/migrate.sh version  # 現在のバージョン確認
+./scripts/migrate.sh down     # ロールバック
+./scripts/migrate.sh force 1  # バージョン強制設定
 ```
 
 ### 5. `.env`ファイルを設定
@@ -96,6 +101,8 @@ doppelcord/
 ├── .env.example                     # 環境変数テンプレート
 ├── .gitignore                       # Git除外設定
 ├── README.md                        # このファイル
+├── scripts/
+│   └── migrate.sh                   # マイグレーション実行スクリプト
 ├── internal/
 │   ├── domain/
 │   │   └── user.go                  # ドメインモデル
