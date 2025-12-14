@@ -30,11 +30,15 @@ jobs:
           DB_PASSWORD=${{ secrets.DB_PASSWORD }}
           DB_NAME=${{ secrets.DB_NAME }}
           DB_SSLMODE=${{ secrets.DB_SSLMODE }}
+          LLM_API_URL=${{ secrets.LLM_API_URL }}
+          LLM_API_KEY=${{ secrets.LLM_API_KEY }}
+          LLM_MODEL=${{ secrets.LLM_MODEL }}
           EOF
 
       - name: Deploy
         run: |
+          sudo systemctl stop doppelcord || true
           cp doppelcord /opt/doppelcord/
           sudo cp deploy/doppelcord.service /etc/systemd/system/
           sudo systemctl daemon-reload
-          sudo systemctl restart doppelcord
+          sudo systemctl start doppelcord
