@@ -11,6 +11,17 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// 登録済みユーザーを保存するマップ
+var registeredUsers = make(map[string]bool)
+
+// スラッシュコマンドの定義
+var commands = []*discordgo.ApplicationCommand{
+	{
+		Name:        "register",
+		Description: "ユーザーを登録します",
+	},
+}
+
 func main() {
 	// .envファイルから環境変数を読み込む
 	err := godotenv.Load()
@@ -24,14 +35,21 @@ func main() {
 		log.Fatal("DISCORD_BOT_TOKEN is not set in .env file")
 	}
 
+	// 環境変数からGuild IDを取得
+	guildID := os.Getenv("GUILD_ID")
+	if guildID == "" {
+		log.Fatal("GUILD_ID is not set in .env file")
+	}
+
 	// Discordセッションを作成
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatal("Error creating Discord session:", err)
 	}
 
-	// メッセージハンドラーを登録
+	// ハンドラーを登録
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(interactionCreate)
 
 	// Intentを設定（メッセージ受信に必要）
 	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages | discordgo.IntentsMessageContent
@@ -42,6 +60,16 @@ func main() {
 		log.Fatal("Error opening connection:", err)
 	}
 	defer dg.Close()
+
+	// スラッシュコマンドを登録
+	for _, cmd := range commands {
+		_, err := dg.ApplicationCommandCreate(dg.State.User.ID, guildID, cmd)
+		if err != nil {
+			log.Printf("Cannot create '%s' command: %v", cmd.Name, err)
+		} else {
+			fmt.Printf("Command '%s' registered\n", cmd.Name)
+		}
+	}
 
 	fmt.Println("Bot is now running. Press CTRL-C to exit.")
 
@@ -65,5 +93,41 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// if err != nil {
 	// 	log.Printf("Error sending message: %v", err)
 	// }
-	fmt.Printf("Channel ID: %s, Author ID: %s, Content: %s\n", m.ChannelID, m.Author.ID, m.Content) // メッセージ内容をコンソールに出力
+	// 登録済みユーザーかどうかでプレフィックスを変える
+	if registeredUsers[m.Author.ID] {
+		fmt.Printf("[登録済] Channel ID: %s, Author ID: %s, Content: %s\n", m.ChannelID, m.Author.ID, m.Content)
+	} else {
+		fmt.Printf("Channel ID: %s, Author ID: %s, Content: %s\n", m.ChannelID, m.Author.ID, m.Content)
+	}
+}
+
+// interactionCreate はインタラクション（スラッシュコマンド等）が発生したときに呼び出される
+func interactionCreate(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	if i.Type != discordgo.InteractionApplicationCommand {
+		return
+	}
+
+	if i.ApplicationCommandData().Name == "register" {
+		userID := i.Member.User.ID
+
+		if registeredUsers[userID] {
+			s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "既に登録済みです。",
+				},
+			})
+			return
+		}
+
+		registeredUsers[userID] = true
+		fmt.Printf("ユーザーを登録しました: %s\n", userID)
+
+		s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			Type: discordgo.InteractionResponseChannelMessageWithSource,
+			Data: &discordgo.InteractionResponseData{
+				Content: "登録が完了しました！",
+			},
+		})
+	}
 }
