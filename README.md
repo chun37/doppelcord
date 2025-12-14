@@ -7,6 +7,7 @@ Go言語で実装されたシンプルなDiscordボットです。
 - `/register` スラッシュコマンドでユーザーを登録
 - 登録済みユーザーからのメッセージには `[登録済]` プレフィックスを表示
 - PostgreSQLによるデータ永続化
+- メモリキャッシュによる高速な登録確認（起動時にDBから読み込み、以降はメモリ参照）
 - 環境変数を使用した安全なトークン管理
 - グレースフルシャットダウン対応
 
@@ -108,6 +109,8 @@ doppelcord/
 │   │   └── user.go                  # ドメインモデル
 │   ├── repository/
 │   │   ├── user_repository.go       # Repositoryインターフェース
+│   │   ├── cached/
+│   │   │   └── user_repository.go   # キャッシュ付きRepository
 │   │   └── postgres/
 │   │       └── user_repository.go   # PostgreSQL実装
 │   ├── handler/

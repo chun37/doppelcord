@@ -56,3 +56,25 @@ func (r *userRepository) Register(ctx context.Context, discordID string) (*domai
 	}
 	return &user, nil
 }
+
+func (r *userRepository) GetAllDiscordIDs(ctx context.Context) ([]string, error) {
+	query := `SELECT discord_id FROM users`
+	rows, err := r.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var ids []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return ids, nil
+}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/chun37/doppelcord/internal/database"
 	"github.com/chun37/doppelcord/internal/handler"
+	"github.com/chun37/doppelcord/internal/repository/cached"
 	"github.com/chun37/doppelcord/internal/repository/postgres"
 )
 
@@ -58,7 +59,13 @@ func main() {
 
 	fmt.Println("Connected to database")
 
-	userRepo := postgres.NewUserRepository(pool)
+	pgUserRepo := postgres.NewUserRepository(pool)
+	userRepo := cached.NewCachedUserRepository(pgUserRepo)
+
+	if err := userRepo.LoadAll(ctx); err != nil {
+		log.Fatal("Failed to load users into cache:", err)
+	}
+	fmt.Println("Loaded users into cache")
 
 	msgHandler := handler.NewMessageHandler(userRepo)
 	interactionHandler := handler.NewInteractionHandler(userRepo)
