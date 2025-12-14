@@ -1,0 +1,17 @@
+# 環境変数ファイル（トークンが含まれるため）
+.env
+
+# バイナリファイル
+doppelcord
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# テスト関連
+*.test
+*.out
+
+# Go workspace file
+go.work
