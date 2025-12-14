@@ -8,16 +8,21 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
+	"github.com/chun37/doppelcord/internal/llm"
 	"github.com/chun37/doppelcord/internal/repository"
 	"github.com/chun37/doppelcord/internal/repository/postgres"
 )
 
 type InteractionHandler struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
+	llmClient *llm.Client
 }
 
-func NewInteractionHandler(userRepo repository.UserRepository) *InteractionHandler {
-	return &InteractionHandler{userRepo: userRepo}
+func NewInteractionHandler(userRepo repository.UserRepository, llmClient *llm.Client) *InteractionHandler {
+	return &InteractionHandler{
+		userRepo:  userRepo,
+		llmClient: llmClient,
+	}
 }
 
 func (h *InteractionHandler) Handle(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -25,8 +30,11 @@ func (h *InteractionHandler) Handle(s *discordgo.Session, i *discordgo.Interacti
 		return
 	}
 
-	if i.ApplicationCommandData().Name == "register" {
+	switch i.ApplicationCommandData().Name {
+	case "register":
 		h.handleRegister(s, i)
+	case "test":
+		h.handleTest(s, i)
 	}
 }
 
@@ -84,4 +92,45 @@ func (h *InteractionHandler) respondWithError(s *discordgo.Session, i *discordgo
 			Content: message,
 		},
 	})
+}
+
+const (
+	testPrompt       = "こんにちは、簡単に自己紹介してください。"
+	maxDiscordLength = 2000
+	truncationSuffix = "\n...(切り詰められました)"
+)
+
+func (h *InteractionHandler) handleTest(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	// 遅延応答（LLM呼び出しは時間がかかるため）
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseDeferredChannelMessageWithSource,
+	})
+	if err != nil {
+		log.Printf("Error deferring response: %v", err)
+		return
+	}
+
+	ctx := context.Background()
+	response, err := h.llmClient.Chat(ctx, testPrompt)
+	if err != nil {
+		log.Printf("Error calling LLM API: %v", err)
+		h.editResponse(s, i, "LLM APIの呼び出しに失敗しました。")
+		return
+	}
+
+	// 2000文字制限の処理
+	if len(response) > maxDiscordLength-len(truncationSuffix) {
+		response = response[:maxDiscordLength-len(truncationSuffix)] + truncationSuffix
+	}
+
+	h.editResponse(s, i, response)
+}
+
+func (h *InteractionHandler) editResponse(s *discordgo.Session, i *discordgo.InteractionCreate, content string) {
+	_, err := s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
+		Content: &content,
+	})
+	if err != nil {
+		log.Printf("Error editing response: %v", err)
+	}
 }

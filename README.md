@@ -5,6 +5,7 @@ Go言語で実装されたシンプルなDiscordボットです。
 ## 機能
 
 - `/register` スラッシュコマンドでユーザーを登録
+- `/test` スラッシュコマンドでLLMにテストメッセージを送信
 - 登録済みユーザーからのメッセージには `[登録済]` プレフィックスを表示
 - 登録済みユーザーのメッセージをDBに保存（月別パーティショニングで大規模対応）
 - PostgreSQLによるデータ永続化
@@ -73,6 +74,11 @@ DB_USER=doppelcord
 DB_PASSWORD=your_password
 DB_NAME=doppelcord
 DB_SSLMODE=disable
+
+# LLM API設定（OpenAI互換API）
+LLM_API_URL=https://api.openai.com/v1/chat/completions
+LLM_API_KEY=your_api_key
+LLM_MODEL=gpt-4o-mini
 ```
 
 ## 実行方法
@@ -109,6 +115,9 @@ doppelcord/
 │   ├── domain/
 │   │   ├── user.go                  # ユーザードメインモデル
 │   │   └── message.go               # メッセージドメインモデル
+│   ├── llm/
+│   │   ├── types.go                 # LLM API型定義
+│   │   └── client.go                # OpenAI互換APIクライアント
 │   ├── repository/
 │   │   ├── user_repository.go       # UserRepositoryインターフェース
 │   │   ├── message_repository.go    # MessageRepositoryインターフェース
@@ -149,6 +158,9 @@ doppelcord/
 - `DB_PASSWORD` - PostgreSQLパスワード
 - `DB_NAME` - データベース名
 - `DB_SSLMODE` - SSL モード（通常は `disable`）
+- `LLM_API_URL` - LLM APIエンドポイントURL
+- `LLM_API_KEY` - LLM APIキー
+- `LLM_MODEL` - 使用するモデル名
 
 ### 自動デプロイ
 

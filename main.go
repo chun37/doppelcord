@@ -13,6 +13,7 @@ import (
 
 	"github.com/chun37/doppelcord/internal/database"
 	"github.com/chun37/doppelcord/internal/handler"
+	"github.com/chun37/doppelcord/internal/llm"
 	"github.com/chun37/doppelcord/internal/repository/cached"
 	"github.com/chun37/doppelcord/internal/repository/postgres"
 )
@@ -21,6 +22,10 @@ var commands = []*discordgo.ApplicationCommand{
 	{
 		Name:        "register",
 		Description: "ユーザーを登録します",
+	},
+	{
+		Name:        "test",
+		Description: "LLMにテストメッセージを送信します",
 	},
 }
 
@@ -69,8 +74,23 @@ func main() {
 
 	msgRepo := postgres.NewMessageRepository(pool)
 
+	// LLM設定の読み込み
+	llmConfig := llm.Config{
+		APIURL: os.Getenv("LLM_API_URL"),
+		APIKey: os.Getenv("LLM_API_KEY"),
+		Model:  os.Getenv("LLM_MODEL"),
+	}
+	if llmConfig.APIURL == "" {
+		log.Fatal("LLM_API_URL is not set in .env file")
+	}
+	if llmConfig.Model == "" {
+		log.Fatal("LLM_MODEL is not set in .env file")
+	}
+	llmClient := llm.NewClient(llmConfig)
+	fmt.Println("LLM client initialized")
+
 	msgHandler := handler.NewMessageHandler(userRepo, msgRepo)
-	interactionHandler := handler.NewInteractionHandler(userRepo)
+	interactionHandler := handler.NewInteractionHandler(userRepo, llmClient)
 
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
