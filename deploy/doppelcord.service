@@ -1,0 +1,16 @@
+[Unit]
+Description=Doppelcord Discord Bot
+After=network.target
+
+[Service]
+Type=simple
+User=runner
+Group=runner
+WorkingDirectory=/opt/doppelcord
+ExecStart=/opt/doppelcord/doppelcord
+Restart=always
+RestartSec=5
+Environment=PATH=/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target

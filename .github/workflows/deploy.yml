@@ -1,0 +1,40 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [master]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Build
+        run: go build -o doppelcord
+
+      - name: Create .env
+        run: |
+          cat > /opt/doppelcord/.env << EOF
+          DISCORD_BOT_TOKEN=${{ secrets.DISCORD_BOT_TOKEN }}
+          GUILD_ID=${{ secrets.GUILD_ID }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_SSLMODE=${{ secrets.DB_SSLMODE }}
+          EOF
+
+      - name: Deploy
+        run: |
+          cp doppelcord /opt/doppelcord/
+          sudo cp deploy/doppelcord.service /etc/systemd/system/
+          sudo systemctl daemon-reload
+          sudo systemctl restart doppelcord

@@ -135,6 +135,41 @@ doppelcord/
 - Discord Developer Portalで「MESSAGE CONTENT INTENT」を必ず有効化してください
 - ボットは自分自身のメッセージには反応しません（無限ループ防止）
 
+## デプロイ
+
+### GitHub Secrets の設定
+
+リポジトリの Settings > Secrets and variables > Actions で以下のSecretsを設定:
+
+- `DISCORD_BOT_TOKEN` - Discord Bot トークン
+- `GUILD_ID` - スラッシュコマンドを登録するサーバーID
+- `DB_HOST` - PostgreSQLホスト
+- `DB_PORT` - PostgreSQLポート
+- `DB_USER` - PostgreSQLユーザー名
+- `DB_PASSWORD` - PostgreSQLパスワード
+- `DB_NAME` - データベース名
+- `DB_SSLMODE` - SSL モード（通常は `disable`）
+
+### 自動デプロイ
+
+`master`ブランチにpushすると、Self-hosted Runner経由で自動的にデプロイされます。
+
+- アプリは `/opt/doppelcord/` に配置されます
+- systemdサービス `doppelcord` として実行されます
+
+### 手動操作
+
+```bash
+# サービスの状態確認
+sudo systemctl status doppelcord
+
+# ログの確認
+sudo journalctl -u doppelcord -f
+
+# 再起動
+sudo systemctl restart doppelcord
+```
+
 ## ライセンス
 
 このプロジェクトはMITライセンスの下で公開されています。
