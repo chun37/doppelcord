@@ -67,7 +67,9 @@ func main() {
 	}
 	fmt.Println("Loaded users into cache")
 
-	msgHandler := handler.NewMessageHandler(userRepo)
+	msgRepo := postgres.NewMessageRepository(pool)
+
+	msgHandler := handler.NewMessageHandler(userRepo, msgRepo)
 	interactionHandler := handler.NewInteractionHandler(userRepo)
 
 	dg, err := discordgo.New("Bot " + token)

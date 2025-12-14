@@ -6,6 +6,7 @@ Go言語で実装されたシンプルなDiscordボットです。
 
 - `/register` スラッシュコマンドでユーザーを登録
 - 登録済みユーザーからのメッセージには `[登録済]` プレフィックスを表示
+- 登録済みユーザーのメッセージをDBに保存（月別パーティショニングで大規模対応）
 - PostgreSQLによるデータ永続化
 - メモリキャッシュによる高速な登録確認（起動時にDBから読み込み、以降はメモリ参照）
 - 環境変数を使用した安全なトークン管理
@@ -106,13 +107,16 @@ doppelcord/
 │   └── migrate.sh                   # マイグレーション実行スクリプト
 ├── internal/
 │   ├── domain/
-│   │   └── user.go                  # ドメインモデル
+│   │   ├── user.go                  # ユーザードメインモデル
+│   │   └── message.go               # メッセージドメインモデル
 │   ├── repository/
-│   │   ├── user_repository.go       # Repositoryインターフェース
+│   │   ├── user_repository.go       # UserRepositoryインターフェース
+│   │   ├── message_repository.go    # MessageRepositoryインターフェース
 │   │   ├── cached/
-│   │   │   └── user_repository.go   # キャッシュ付きRepository
+│   │   │   └── user_repository.go   # キャッシュ付きUserRepository
 │   │   └── postgres/
-│   │       └── user_repository.go   # PostgreSQL実装
+│   │       ├── user_repository.go   # UserRepository PostgreSQL実装
+│   │       └── message_repository.go # MessageRepository PostgreSQL実装
 │   ├── handler/
 │   │   ├── message_handler.go       # メッセージハンドラー
 │   │   └── interaction_handler.go   # インタラクションハンドラー
@@ -120,7 +124,9 @@ doppelcord/
 │       └── postgres.go              # DB接続管理
 └── migrations/
     ├── 000001_create_users_table.up.sql
-    └── 000001_create_users_table.down.sql
+    ├── 000001_create_users_table.down.sql
+    ├── 000002_create_messages_table.up.sql
+    └── 000002_create_messages_table.down.sql
 ```
 
 ## 注意事項
