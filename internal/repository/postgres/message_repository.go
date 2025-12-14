@@ -61,3 +61,34 @@ func (r *messageRepository) FindByDiscordID(ctx context.Context, discordID strin
 	}
 	return messages, nil
 }
+
+func (r *messageRepository) FindByDiscordIDAndChannelID(ctx context.Context, discordID, channelID string, limit int) ([]*domain.Message, error) {
+	query := `
+		SELECT id, discord_id, channel_id, message_id, content, created_at, stored_at
+		FROM messages
+		WHERE discord_id = $1 AND channel_id = $2
+		ORDER BY created_at DESC
+		LIMIT $3
+	`
+	rows, err := r.pool.Query(ctx, query, discordID, channelID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []*domain.Message
+	for rows.Next() {
+		var msg domain.Message
+		if err := rows.Scan(
+			&msg.ID, &msg.DiscordID, &msg.ChannelID, &msg.MessageID,
+			&msg.Content, &msg.CreatedAt, &msg.StoredAt,
+		); err != nil {
+			return nil, err
+		}
+		messages = append(messages, &msg)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return messages, nil
+}

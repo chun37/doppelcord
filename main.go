@@ -90,7 +90,7 @@ func main() {
 	fmt.Println("LLM client initialized")
 
 	msgHandler := handler.NewMessageHandler(userRepo, msgRepo)
-	interactionHandler := handler.NewInteractionHandler(userRepo, llmClient)
+	interactionHandler := handler.NewInteractionHandler(userRepo, msgRepo, llmClient)
 
 	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
