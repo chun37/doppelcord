@@ -137,7 +137,9 @@ doppelcord/
     ├── 000001_create_users_table.up.sql
     ├── 000001_create_users_table.down.sql
     ├── 000002_create_messages_table.up.sql
-    └── 000002_create_messages_table.down.sql
+    ├── 000002_create_messages_table.down.sql
+    ├── 000003_create_messages_2026_2030_partitions.up.sql
+    └── 000003_create_messages_2026_2030_partitions.down.sql
 ```
 
 ## 注意事項
