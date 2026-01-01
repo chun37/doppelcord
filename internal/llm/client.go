@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -36,6 +37,9 @@ func NewClient(config Config) *Client {
 
 // Chat はチャットリクエストを送信し、レスポンスを返す
 func (c *Client) Chat(ctx context.Context, prompt string) (string, error) {
+	log.Printf("[LLM Request] Model: %s", c.config.Model)
+	log.Printf("[LLM Request] User: %s", prompt)
+
 	req := ChatRequest{
 		Model: c.config.Model,
 		Messages: []ChatMessage{
@@ -91,6 +95,10 @@ func (c *Client) Chat(ctx context.Context, prompt string) (string, error) {
 
 // ChatWithSystem はsystemプロンプト付きでチャットリクエストを送信
 func (c *Client) ChatWithSystem(ctx context.Context, systemPrompt, userPrompt string) (string, error) {
+	log.Printf("[LLM Request] Model: %s", c.config.Model)
+	log.Printf("[LLM Request] System: %s", systemPrompt)
+	log.Printf("[LLM Request] User: %s", userPrompt)
+
 	req := ChatRequest{
 		Model: c.config.Model,
 		Messages: []ChatMessage{
